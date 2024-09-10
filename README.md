@@ -43,10 +43,13 @@ For those who aren't familiar with the Makefile system and would like an overvie
 
 ### Setting up your virtual machine
 
-We are going to install several packages to support this code.  You
-should use the `e2-micro` instance type that we considered in the GCP
-walkthrough on 9/17 (with Debian Buster as the recommended operating
-system).  With this setup, you will *need* the following packages:
+We are going to install several packages to support this code.  For development,
+I recommend the `e2-micro` instance type that we considered in the GCP
+walkthrough on 9/10 (with Debian Bookwork as the recommended operating
+system).  For timing, we will use the `e2-highcpu-2` configuration, but you
+do not need to use this for regular development.
+
+With this setup, you will *need* the following packages:
 
 - `build-essential`: GCC, Make, and various other basic tools for
   working with compiled codes.
