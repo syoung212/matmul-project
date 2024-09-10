@@ -6,7 +6,7 @@ CC=clang
 LD=clang
 
 # Python (for plotting)
-PYTHON=python
+PYTHON=python3
 
 # Compiler optimization flags.  You will definitely want to play with these!
 OPTFLAGS = -O3 
