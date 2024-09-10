@@ -28,11 +28,7 @@ The main files are:
 You will probably mostly be looking at `Makefile.in` and `dgemm_*.c`. Note that "dgemm" stands for "**D**ouble Precision **GE**neral **M**atrix **M**ultiply".   
 ## Makefile system
 
-I have built the reference code with two compilers:
-
-1.  GCC 8.3.0 on Debian Buster on GCP (gcc)
-2.  CLang 7.0.1-8 on Debian Buster on GCP (clang)
-
+I have built the reference code with GCC and CLang on GCP.
 You can switch between these options by adding `PLATFORM=clang` (for
 example) to your `make` command, or by changing the `PLATFORM=gcc`
 line at the top of the Makefile.  For example, to build all the
@@ -42,11 +38,6 @@ drivers on my laptop, I run
 
 from the terminal.  If someone feels like adding an autoconf or CMake
 script for these configurations, I would welcome it!
-
-If you want to play around with the Intel compiler, it typically does
-much better than GCC on this type of code.  However, we can't install
-the Intel compiler on non-university machines under the terms of the
-educational license, so we will stick with GCC and CLang on GCP.
 
 For those who aren't familiar with the Makefile system and would like an overview, please consult these two links: [tutorial](http://mrbook.org/blog/tutorials/make/) [more in-depth tutorial](http://www.cs.swarthmore.edu/~newhall/unixhelp/howto_makefiles.html) 
 
@@ -68,10 +59,10 @@ system).  With this setup, you will *need* the following packages:
 - `clang`: The CLang compiler
 - `libomp-dev`: Support library for OpenMP with CLang
 - `git`: So you can fetch this repository
-- `libopenblas-base` and `libopenblas-dev`: The OpenBLAS library is a
+- `libopenblas-dev`: The OpenBLAS library is a
   fast BLAS implementation for modern Intel processors.
-- The Python stack: `python-numpy`, `python-scipy`, `python-pandas`, and
-  `python-matplotlib`
+- The Python stack: `python3-numpy`, `python3-scipy`, `python3-pandas`, and
+  `python3-matplotlib`
 
 I *recommend* also installing the following packages (which you may
 have already done):
