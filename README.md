@@ -73,16 +73,6 @@ have already done):
 Once you have installed the compiler and the OpenBlas libraries,
 building with GCC is as simple as typing `make` (or `make
 PLATFORM=gcc`).  But it is worth poking through the Makefile.
-You may notice the `-std=gnu99` flag in `Makefile.in.gcc`.  This tells
-the compiler that we want to use the C99 language variant with
-extensions, though the only extension we are using is actually the
-call to the `drand48` random number generation routine.  If you don't
-tell the compiler that you want at least C99, it will assume you are
-using C89, and complain about things like variable declarations inside
-of the initializer clause in a `for` loop.
-
-Why do we assume that a 25-year-old standard takes precedence over the
-"new" 15-year-old standard?  Beats me, but this is what it is.
 
 ### Building on MacOS
 

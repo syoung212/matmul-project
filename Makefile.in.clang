@@ -10,7 +10,7 @@ PYTHON=python
 
 # Compiler optimization flags.  You will definitely want to play with these!
 OPTFLAGS = -O3 
-CFLAGS = -std=gnu99 -fopenmp
+CFLAGS = -fopenmp
 FFLAGS =
 LDFLAGS = -fopenmp=libomp 
 
