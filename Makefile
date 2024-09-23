@@ -10,6 +10,7 @@ PLATFORM=gcc
 include Makefile.in.$(PLATFORM)
 DRIVERS=$(addprefix matmul-,$(BUILDS))
 TIMINGS=$(addsuffix .csv,$(addprefix timing-,$(BUILDS)))
+INCMINE= -O3 -funroll-loops -ftree-vectorize -march=native 
 
 .PHONY:	all
 all:	$(DRIVERS)
@@ -32,6 +33,9 @@ matmul-mkl: $(OBJS) dgemm_mkl.o
 matmul-veclib: $(OBJS) dgemm_veclib.o
 	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS) -framework Accelerate
 
+matmul-mine: $(OBJS) dgemm_mine.o
+	$(LD) -o $@ $^ $(LDFLAGS) $(LIBS) 
+
 # --
 # Rules to build object files
 
@@ -52,6 +56,9 @@ dgemm_mkl.o: dgemm_blas.c
 
 dgemm_veclib.o: dgemm_blas.c
 	clang -o $@ -c $(CFLAGS) $(CPPFLAGS) -DOSX_ACCELERATE $< 
+
+dgemm_mine.o: dgemm_mine.c
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(INCMINE) $< 
 
 # ---
 # Rules for building timing CSV outputs

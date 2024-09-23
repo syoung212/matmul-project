@@ -16,7 +16,7 @@ const char *dgemm_desc = "My awesome dgemm.";
 
   lda is the leading dimension of the matrix (the M of square_dgemm).
 */
-void cpy_to_bufferA(const int lda, const int rows, const int cols, const double *src, double *buffer)
+void cpy_to_bufferA(const int lda, const int rows, const int cols, const double * restrict src, double * restrict buffer)
 {
     for (int j = 0; j < cols; ++j)
     {
@@ -27,7 +27,7 @@ void cpy_to_bufferA(const int lda, const int rows, const int cols, const double 
     }
 }
 
-void cpy_to_bufferB(const int lda, const int rows, const int cols, const double *src, double *buffer)
+void cpy_to_bufferB(const int lda, const int rows, const int cols, const double * restrict src, double * restrict buffer)
 {
     for (int j = 0; j < cols; ++j)
     {
@@ -69,7 +69,7 @@ void cpy_to_bufferB(const int lda, const int rows, const int cols, const double 
 
 // VERSION 2
 void simd_dgemm(const int lda, const int M, const int N, const int K,
-                const double *A, const double *B, double *C) {
+                const double * restrict A, const double * restrict B, double * restrict C) {
     int i, j, k;
 
     for (i = 0; i < M; ++i) {
@@ -84,7 +84,6 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
             for (k = 0; k <= K - 4; k += 4) {
                 // cij += A[i * K + k] * B[j * K + k];
                 // cij += A[i * K + k + 1] * B[j * K + k + 1];
-
                 __m128d a_reg1 = _mm_loadu_pd(&A[i * K + k]);  // Load 2 doubles from A
                 __m128d a_reg2 = _mm_loadu_pd(&A[i * K + k + 2]);  // Load 2 doubles from A
                 __m128d b_reg1 = _mm_loadu_pd(&B[j * K + k]);  // Load 2 doubles from B
@@ -118,7 +117,7 @@ void simd_dgemm(const int lda, const int M, const int N, const int K,
 
 
 void loop_unroll_dgemm(const int lda, const int M, const int N, const int K,
-                       const double *A, const double *B, double *C)
+                       const double * restrict A, const double * restrict B, double * restrict C)
 {
     int i, j, k;
     for (i = 0; i < M; ++i)
@@ -143,15 +142,19 @@ void loop_unroll_dgemm(const int lda, const int M, const int N, const int K,
 }
 
 void do_block(const int lda,
-              const double *A, const double *B, double *C,
+              const double * restrict A, const double * restrict B, double *restrict C,
               const int i, const int j, const int k)
 {
     const int M = (i + BLOCK_SIZE > lda ? lda - i : BLOCK_SIZE);
     const int N = (j + BLOCK_SIZE > lda ? lda - j : BLOCK_SIZE);
     const int K = (k + BLOCK_SIZE > lda ? lda - k : BLOCK_SIZE);
 
-    double *A_buffer = (double *)aligned_alloc(16, M * K * sizeof(double)); // store in aligned row major
-    double *B_buffer = (double *)aligned_alloc(16, K * N * sizeof(double)); // store in aligned column major
+    // double *A_buffer = (double *)aligned_alloc(16, M * K * sizeof(double)); // store in aligned row major
+    // double *B_buffer = (double *)aligned_alloc(16, K * N * sizeof(double)); // store in aligned column major
+    double *A_buffer = (double *)_mm_malloc(M * K * sizeof(double), 16);
+    double *B_buffer = (double *)_mm_malloc(K * N * sizeof(double), 16);
+
+    
 
     cpy_to_bufferA(lda, M, K, A + i + k * lda, A_buffer);
     cpy_to_bufferB(lda, K, N, B + k + j * lda, B_buffer);
@@ -165,7 +168,7 @@ void do_block(const int lda,
     free(B_buffer);
 }
 
-void square_dgemm(const int M, const double *A, const double *B, double *C)
+void square_dgemm(const int M, const double * restrict A, const double * restrict B, double * restrict C)
 {
     const int n_blocks = M / BLOCK_SIZE + (M % BLOCK_SIZE ? 1 : 0);
     int bi, bj, bk;
