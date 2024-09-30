@@ -34,14 +34,15 @@ void col_to_col(const int lda, const int rows, const int cols, const double * re
     }
 }
 
-void col_to_col_add(const int lda, const int rows, const int cols, const double * restrict src, double * restrict buffer)
+void col_to_col_add(const int lda, const int rows, const int cols, const double * restrict buffer, double * restrict src)
 {
     for (int j = 0; j < cols; ++j)
     {
         for (int i = 0; i < rows; ++i)
         {
 
-            buffer[j * rows + i] += src[i + j * lda];
+            src[i + j * lda] += buffer[j * rows + i];
+            //src[j * rows + i] += buffer[i + j * lda];
         }
     }
 }
@@ -52,13 +53,14 @@ void dgemm_ref(const int lda, const int M, const int N, const int K,
     for (int j = 0; j < N; ++j) {
         for (int k = 0; k < K; ++k) {
             double b = B[j * K + k];
-            __m256d b_reg = _mm256_broadcast_sd(&B[j * K + k]);
+            // __m512d b_reg = _mm512_broadcast_sd(&B[j * K + k]);
+            __m512d b_reg = _mm512_set1_pd((double)b);
             int i = 0;
-            for (; i < M - 4; i+=4) {
-                __m256d a_reg1 = _mm256_loadu_pd(&A[k * M + i]);
-                __m256d c_reg1 = _mm256_loadu_pd(&C[j * lda + i]);
-                 c_reg1 = _mm256_fmadd_pd(a_reg1, b_reg, c_reg1);
-                _mm256_storeu_pd(&C[j * lda + i], c_reg1);
+            for (; i < M - 8; i+=8) {
+                __m512d a_reg1 = _mm512_loadu_pd(&A[k * M + i]);
+                __m512d c_reg1 = _mm512_loadu_pd(&C[j * lda + i]);
+                 c_reg1 = _mm512_fmadd_pd(a_reg1, b_reg, c_reg1);
+                _mm512_storeu_pd(&C[j * lda + i], c_reg1);
             }
             for (; i < M; ++i)
             {
@@ -79,8 +81,8 @@ void do_block(const int lda,
     col_to_col(lda, k_block_size, j_block_size, B + k + j * lda, B_buffer);
     // col_to_col(lda, i_block_size, j_block_size, C + i + j * lda, C_buffer);
     dgemm_ref(lda, i_block_size, j_block_size, k_block_size, A_buffer, B_buffer, C + i + j * lda);
-    // dgemm_ref(lda, i_block_size, j_block_size, k_block_size, A_buffer, B_buffer, C_buffer);
-    // col_to_col_add(lda, i_block_size, j_block_size, C_buffer, C + i + j * lda);
+    //dgemm_ref(lda, i_block_size, j_block_size, k_block_size, A_buffer, B_buffer, C_buffer);
+    //col_to_col_add(lda, i_block_size, j_block_size, C_buffer, C + i + j * lda);
 }
 
 void square_dgemm(const int M, const double * restrict A, const double * restrict B, double * restrict C)
