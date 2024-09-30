@@ -34,9 +34,9 @@ extern void square_dgemm();
   are multiplied at least MIN_RUNS times.  If that doesn't take MIN_SECS
   seconds, then we double the number of iterations and try again.
 
-  You may want to modify these to speed debugging...
+  You may want to modify these to speed debugging... 4
 */
-#define MIN_RUNS 4
+#define MIN_RUNS 1
 /* #define MIN_SECS 1.0 */
 #define MIN_SECS 0.25
 
