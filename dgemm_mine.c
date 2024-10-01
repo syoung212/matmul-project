@@ -11,7 +11,7 @@ const char *dgemm_desc = "My awesome dgemm.";
 #endif
 
 #ifndef SUPER_BLOCK_SIZE
-#define SUPER_BLOCK_SIZE ((int)1024)
+#define SUPER_BLOCK_SIZE ((int)512)
 #endif
 
 /*
@@ -157,7 +157,6 @@ void dgemm_ref_unroll32(const int lda, const int M, const int N, const int K,
     }
 }
 
-#include <immintrin.h>  // For AVX512 intrinsics
 
 void dgemm_ref_unroll(const int lda, const int M, const int N, const int K,
                       const double *A, const double *B, const double *C_buffer, double *C)
