@@ -11,7 +11,7 @@ const char *dgemm_desc = "My awesome dgemm.";
 #endif
 
 #ifndef SUPER_BLOCK_SIZE
-#define SUPER_BLOCK_SIZE ((int)512)
+#define SUPER_BLOCK_SIZE ((int)256)
 #endif
 
 /*
@@ -165,40 +165,167 @@ void dgemm_ref_unroll(const int lda, const int M, const int N, const int K,
         int i = 0;
 
         // Process 64 elements at a time
-        // for (; i < M - 64; i += 64) {
-        //     // Load initial values of C for 8 rows at once
-        //     __m512d c_reg0 = _mm512_loadu_pd(&C_buffer[j * lda + i + 0]);
-        //     __m512d c_reg1 = _mm512_loadu_pd(&C_buffer[j * lda + i + 8]);
-        //     __m512d c_reg2 = _mm512_loadu_pd(&C_buffer[j * lda + i + 16]);
-        //     __m512d c_reg3 = _mm512_loadu_pd(&C_buffer[j * lda + i + 24]);
-        //     __m512d c_reg4 = _mm512_loadu_pd(&C_buffer[j * lda + i + 32]);
-        //     __m512d c_reg5 = _mm512_loadu_pd(&C_buffer[j * lda + i + 40]);
-        //     __m512d c_reg6 = _mm512_loadu_pd(&C_buffer[j * lda + i + 48]);
-        //     __m512d c_reg7 = _mm512_loadu_pd(&C_buffer[j * lda + i + 56]);
+        for (; i < M - 64; i += 64) {
+            // Load initial values of C for 8 rows at once
+            __m512d c_reg0 = _mm512_loadu_pd(&C_buffer[j * lda + i + 0]);
+            __m512d c_reg1 = _mm512_loadu_pd(&C_buffer[j * lda + i + 8]);
+            __m512d c_reg2 = _mm512_loadu_pd(&C_buffer[j * lda + i + 16]);
+            __m512d c_reg3 = _mm512_loadu_pd(&C_buffer[j * lda + i + 24]);
+            __m512d c_reg4 = _mm512_loadu_pd(&C_buffer[j * lda + i + 32]);
+            __m512d c_reg5 = _mm512_loadu_pd(&C_buffer[j * lda + i + 40]);
+            __m512d c_reg6 = _mm512_loadu_pd(&C_buffer[j * lda + i + 48]);
+            __m512d c_reg7 = _mm512_loadu_pd(&C_buffer[j * lda + i + 56]);
 
-        //     for (int k = 0; k < K; ++k) {
-        //         __m512d b_reg = _mm512_set1_pd(B[j * K + k]); // Broadcast B value
-        //         // Load A values and perform FMADD directly to the C registers
-        //         c_reg0 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 0]), b_reg, c_reg0);
-        //         c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg1);
-        //         c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 16]), b_reg, c_reg2);
-        //         c_reg3 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 24]), b_reg, c_reg3);
-        //         c_reg4 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 32]), b_reg, c_reg4);
-        //         c_reg5 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 40]), b_reg, c_reg5);
-        //         c_reg6 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 48]), b_reg, c_reg6);
-        //         c_reg7 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 56]), b_reg, c_reg7);
-        //     }
+            for (int k = 0; k < K; ++k) {
+                __m512d b_reg = _mm512_set1_pd(B[j * K + k]); // Broadcast B value
+                // Load A values and perform FMADD directly to the C registers
+                c_reg0 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 0]), b_reg, c_reg0);
+                c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg1);
+                c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 16]), b_reg, c_reg2);
+                c_reg3 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 24]), b_reg, c_reg3);
+                c_reg4 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 32]), b_reg, c_reg4);
+                c_reg5 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 40]), b_reg, c_reg5);
+                c_reg6 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 48]), b_reg, c_reg6);
+                c_reg7 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 56]), b_reg, c_reg7);
+            }
 
-        //     // Store the accumulated values back to C
-        //     _mm512_storeu_pd(&C[j * lda + i + 0], c_reg0);
-        //     _mm512_storeu_pd(&C[j * lda + i + 8], c_reg1);
-        //     _mm512_storeu_pd(&C[j * lda + i + 16], c_reg2);
-        //     _mm512_storeu_pd(&C[j * lda + i + 24], c_reg3);
-        //     _mm512_storeu_pd(&C[j * lda + i + 32], c_reg4);
-        //     _mm512_storeu_pd(&C[j * lda + i + 40], c_reg5);
-        //     _mm512_storeu_pd(&C[j * lda + i + 48], c_reg6);
-        //     _mm512_storeu_pd(&C[j * lda + i + 56], c_reg7);
-        // }
+            // Store the accumulated values back to C
+            _mm512_storeu_pd(&C[j * lda + i + 0], c_reg0);
+            _mm512_storeu_pd(&C[j * lda + i + 8], c_reg1);
+            _mm512_storeu_pd(&C[j * lda + i + 16], c_reg2);
+            _mm512_storeu_pd(&C[j * lda + i + 24], c_reg3);
+            _mm512_storeu_pd(&C[j * lda + i + 32], c_reg4);
+            _mm512_storeu_pd(&C[j * lda + i + 40], c_reg5);
+            _mm512_storeu_pd(&C[j * lda + i + 48], c_reg6);
+            _mm512_storeu_pd(&C[j * lda + i + 56], c_reg7);
+        }
+
+        // Handle remaining elements in chunks of 32
+        for (; i < M - 32; i += 32) {
+            __m512d c_reg0 = _mm512_loadu_pd(&C_buffer[j * M + i + 0]);
+            __m512d c_reg1 = _mm512_loadu_pd(&C_buffer[j * M + i + 8]);
+            __m512d c_reg2 = _mm512_loadu_pd(&C_buffer[j * M + i + 16]);
+            __m512d c_reg3 = _mm512_loadu_pd(&C_buffer[j * M + i + 24]);
+
+            for (int k = 0; k < K; ++k) {
+                double b = B[j * K + k];
+                __m512d b_reg = _mm512_set1_pd(b);
+
+                c_reg0 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 0]), b_reg, c_reg0);
+                c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg1);
+                c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 16]), b_reg, c_reg2);
+                c_reg3 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 24]), b_reg, c_reg3);
+            }
+
+            _mm512_storeu_pd(&C[j * lda + i + 0], c_reg0);
+            _mm512_storeu_pd(&C[j * lda + i + 8], c_reg1);
+            _mm512_storeu_pd(&C[j * lda + i + 16], c_reg2);
+            _mm512_storeu_pd(&C[j * lda + i + 24], c_reg3);
+        }
+
+        // Handle remaining elements in chunks of 16
+        for (; i < M - 16; i += 16) {
+            __m512d c_reg1 = _mm512_loadu_pd(&C[j * lda + i]);
+            __m512d c_reg2 = _mm512_loadu_pd(&C[j * lda + i + 8]);
+            
+
+            for (int k = 0; k < K; ++k) {
+                double b = B[j * K + k];
+                __m512d b_reg = _mm512_set1_pd(b);
+                c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i]), b_reg, c_reg1);
+                c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg2);
+            }
+
+            _mm512_storeu_pd(&C[j * lda + i], c_reg1);
+            _mm512_storeu_pd(&C[j * lda + i + 8], c_reg2);
+        }
+
+        // Handle remaining elements in chunks of 8
+        for (; i < M - 8; i += 8) {
+            __m512d c_reg = _mm512_loadu_pd(&C[j * lda + i]);
+
+            for (int k = 0; k < K; ++k) {
+                __m512d b_reg = _mm512_set1_pd(B[j * K + k]);
+                c_reg = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i]), b_reg, c_reg);
+            }
+
+            _mm512_storeu_pd(&C[j * lda + i], c_reg);
+        }
+
+        // Handle any remaining elements (less than 8)
+        for (; i < M; ++i) {
+            double c_value = C[j * lda + i];
+            for (int k = 0; k < K; ++k) {
+                c_value += A[k * M + i] * B[j * K + k];
+            }
+            C[j * lda + i] = c_value; // Store the final accumulated value
+        }
+    }
+}
+void dgemm_kernel_8x8(const int lda, const double *A, const double *B, double *C, const int K) {
+    __m512d c_reg[8];
+
+    // Load C values (8x8 block)
+    for (int i = 0; i < 8; ++i) {
+        c_reg[i] = _mm512_loadu_pd(&C[i * lda]);
+    }
+
+    // Multiply and accumulate
+    for (int k = 0; k < K; ++k) {
+        __m512d b_reg = _mm512_set1_pd(B[k]); // Broadcast one element of B
+        for (int i = 0; i < 8; ++i) {
+            __m512d a_reg = _mm512_loadu_pd(&A[k * 8 + i * 8]);
+            c_reg[i] = _mm512_fmadd_pd(a_reg, b_reg, c_reg[i]);
+        }
+    }
+
+    // Store back to C
+    for (int i = 0; i < 8; ++i) {
+        _mm512_storeu_pd(&C[i * lda], c_reg[i]);
+    }
+}
+
+void dgemm_ref_kernel(const int lda, const int M, const int N, const int K,
+                      const double *A, const double *B, const double *C_buffer, double *C)
+{
+    for (int j = 0; j < N; ++j) {
+        int i = 0;
+
+        // Process 64 elements at a time
+        for (; i < M - 64; i += 64) {
+            // Load initial values of C for 8 rows at once
+            __m512d c_reg0 = _mm512_loadu_pd(&C_buffer[j * lda + i + 0]);
+            __m512d c_reg1 = _mm512_loadu_pd(&C_buffer[j * lda + i + 8]);
+            __m512d c_reg2 = _mm512_loadu_pd(&C_buffer[j * lda + i + 16]);
+            __m512d c_reg3 = _mm512_loadu_pd(&C_buffer[j * lda + i + 24]);
+            __m512d c_reg4 = _mm512_loadu_pd(&C_buffer[j * lda + i + 32]);
+            __m512d c_reg5 = _mm512_loadu_pd(&C_buffer[j * lda + i + 40]);
+            __m512d c_reg6 = _mm512_loadu_pd(&C_buffer[j * lda + i + 48]);
+            __m512d c_reg7 = _mm512_loadu_pd(&C_buffer[j * lda + i + 56]);
+
+            for (int k = 0; k < K; ++k) {
+                __m512d b_reg = _mm512_set1_pd(B[j * K + k]); // Broadcast B value
+                // Load A values and perform FMADD directly to the C registers
+                c_reg0 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 0]), b_reg, c_reg0);
+                c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg1);
+                c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 16]), b_reg, c_reg2);
+                c_reg3 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 24]), b_reg, c_reg3);
+                c_reg4 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 32]), b_reg, c_reg4);
+                c_reg5 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 40]), b_reg, c_reg5);
+                c_reg6 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 48]), b_reg, c_reg6);
+                c_reg7 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 56]), b_reg, c_reg7);
+            }
+
+            // Store the accumulated values back to C
+            _mm512_storeu_pd(&C[j * lda + i + 0], c_reg0);
+            _mm512_storeu_pd(&C[j * lda + i + 8], c_reg1);
+            _mm512_storeu_pd(&C[j * lda + i + 16], c_reg2);
+            _mm512_storeu_pd(&C[j * lda + i + 24], c_reg3);
+            _mm512_storeu_pd(&C[j * lda + i + 32], c_reg4);
+            _mm512_storeu_pd(&C[j * lda + i + 40], c_reg5);
+            _mm512_storeu_pd(&C[j * lda + i + 48], c_reg6);
+            _mm512_storeu_pd(&C[j * lda + i + 56], c_reg7);
+        }
 
         // Handle remaining elements in chunks of 32
         for (; i < M - 32; i += 32) {
@@ -224,21 +351,21 @@ void dgemm_ref_unroll(const int lda, const int M, const int N, const int K,
         }
 
         // // Handle remaining elements in chunks of 16
-        // for (; i < M - 16; i += 16) {
-        //     __m512d c_reg1 = _mm512_loadu_pd(&C[j * lda + i]);
-        //     __m512d c_reg2 = _mm512_loadu_pd(&C[j * lda + i + 8]);
+        for (; i < M - 16; i += 16) {
+            __m512d c_reg1 = _mm512_loadu_pd(&C[j * lda + i]);
+            __m512d c_reg2 = _mm512_loadu_pd(&C[j * lda + i + 8]);
             
 
-        //     for (int k = 0; k < K; ++k) {
-        //         double b = B[j * K + k];
-        //         __m512d b_reg = _mm512_set1_pd(b);
-        //         c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i]), b_reg, c_reg1);
-        //         c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg2);
-        //     }
+            for (int k = 0; k < K; ++k) {
+                double b = B[j * K + k];
+                __m512d b_reg = _mm512_set1_pd(b);
+                c_reg1 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i]), b_reg, c_reg1);
+                c_reg2 = _mm512_fmadd_pd(_mm512_loadu_pd(&A[k * M + i + 8]), b_reg, c_reg2);
+            }
 
-        //     _mm512_storeu_pd(&C[j * lda + i], c_reg1);
-        //     _mm512_storeu_pd(&C[j * lda + i + 8], c_reg2);
-        // }
+            _mm512_storeu_pd(&C[j * lda + i], c_reg1);
+            _mm512_storeu_pd(&C[j * lda + i + 8], c_reg2);
+        }
 
         // Handle remaining elements in chunks of 8
         for (; i < M - 8; i += 8) {
@@ -326,7 +453,7 @@ void do_block(const int lda,
     col_to_col(lda, i_block_size, k_block_size, A + i + k * lda, A_buffer);
     col_to_col(lda, k_block_size, j_block_size, B + k + j * lda, B_buffer);
     col_to_col(lda, i_block_size, j_block_size, C + i + j * lda, C_buffer);
-    dgemm_ref_unroll(lda, i_block_size, j_block_size, k_block_size, A_buffer, B_buffer, C_buffer, C + i + j * lda);
+    dgemm_ref_unroll(lda, i_block_size, j_block_size, k_block_size, A_buffer, B_buffer, C_buffer , C + i + j * lda);
     // dgemm_ref_unroll(lda, i_block_size, j_block_size, k_block_size, A_buffer, B_buffer, C_buffer);
     // col_to_col_add(lda, i_block_size, j_block_size, C_buffer, C + i + j * lda);
 }
